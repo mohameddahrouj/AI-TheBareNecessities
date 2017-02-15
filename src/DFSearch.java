@@ -13,9 +13,9 @@ public class DFSearch
 	/**
 	 * Initialize SMP
 	 */
-	public static void search(int[] board, int n, int m)
+	public static void search(int[] board, int[] goal, int n, int m)
 	{
-		SearchNode root = new SearchNode(new SMPState(board, n, m));
+		SearchNode root = new SearchNode(new SMPState(board, goal, n, m, false));
 		Stack<SearchNode> stack = new Stack<SearchNode>();
 
 		HashSet<Integer> visitedStates = new HashSet<>();

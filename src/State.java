@@ -15,6 +15,16 @@ public interface State
 	// determine cost from initial state to THIS state
 	// cost to come to this state
 	double findCost();
+	
+	//A* Heuristics
+	//h1(n) value
+	int getOutOfPlace();
+	
+	//h2(n) value
+	int getManDist();
+	
+	//h3(n) value
+	int getAverageHeuristic();
 
 	// print the current state
 	public void printState();

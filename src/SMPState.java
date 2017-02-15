@@ -20,8 +20,10 @@ public class SMPState implements State
 	private int manDist = 0;
 	private int averageHeuristic = 0;
 
-	private int[] GOAL;
+	private int[] goal;
 	private int[] currentBoard;
+	
+	private boolean isAStar;
 	
 	private int rows;
 	private int cols;
@@ -29,27 +31,22 @@ public class SMPState implements State
 	// Constructor
 	// board = representation for the new state to be constructed
 	// n,m board size
-	public SMPState(int[] board, int rows, int cols)
+	public SMPState(int[] board, int[] goal, int rows, int cols, boolean isAStar)
 	{
-		currentBoard = board;
+		this.currentBoard = board;
+		this.goal = goal;
 		this.rows = rows;
 		this.cols = cols;
+		this.isAStar = isAStar;
 		//Calculate puzzle size if different than 3x3
 		PUZZLE_SIZE = rows*cols;
 		
-		//Initialize GOAL board
-		if (rows==2 && cols==4){
-			GOAL = new int[]{1, 2, 3, 4, 5, 6, 7, 0};
+		if(isAStar){
+			//Set AStar Heuristics
+			setOutOfPlace();
+			setManDist();
+			setAverageHeuristic();
 		}
-		if (rows==3 && cols==3){
-			GOAL = new int[]{1, 2, 3, 8, 0, 4, 7, 6, 5};
-		}
-		if (rows==2 && cols==5){
-			GOAL = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 0};
-		}
-		setOutOfPlace();
-		setManDist();
-		setAverageHeuristic();
 	}
 
 	@Override
@@ -64,7 +61,7 @@ public class SMPState implements State
 	{
 		for (int i = 0; i < currentBoard.length; i++)
 		{
-			if (currentBoard[i] != GOAL[i])
+			if (currentBoard[i] != goal[i])
 			{
 				outOfPlace++;
 			}
@@ -134,18 +131,21 @@ public class SMPState implements State
 	}
 
 	// Return the h1(n) value
+	@Override
 	public int getOutOfPlace()
 	{
 		return outOfPlace;
 	}
 
 	// Return the h2(n) value
+	@Override
 	public int getManDist()
 	{
 		return manDist;
 	}
 	
 	// Return the h3(n) value
+	@Override
 	public int getAverageHeuristic()
 	{
 		return averageHeuristic;
@@ -279,7 +279,7 @@ public class SMPState implements State
 		int temp = copy[p1];
 		copy[p1] = currentBoard[p2];
 		copy[p2] = temp;
-		s.add((new SMPState(copy, rows, cols)));
+		s.add((new SMPState(copy, goal, rows, cols, isAStar)));
 	}
 	
 	public int hashCode()
@@ -298,7 +298,7 @@ public class SMPState implements State
 	@Override
 	public boolean isGoal()
 	{
-		if (Arrays.equals(currentBoard, GOAL))
+		if (Arrays.equals(currentBoard, goal))
 		{
 			return true;
 		}
@@ -306,29 +306,26 @@ public class SMPState implements State
 	}
 
 	/**
-	 * Method to print out the current state. Prints the puzzle board.
+	 * Method to print out the current state. Prints the puzzle board for any size.
 	 */
 	@Override
 	public void printState()
 	{
-		if(rows ==3 && cols==3){
-			System.out.println(currentBoard[0] + " | " + currentBoard[1] + " | " + currentBoard[2]);
-			System.out.println("---------");
-			System.out.println(currentBoard[3] + " | " + currentBoard[4] + " | " + currentBoard[5]);
-			System.out.println("---------");
-			System.out.println(currentBoard[6] + " | " + currentBoard[7] + " | " + currentBoard[8]);
-		}
-		if(rows ==2 && cols==4){
-			System.out.println(currentBoard[0] + " | " + currentBoard[1] + " | " + currentBoard[2] + " | " + currentBoard[3]);
-			System.out.println("-------------");
-			System.out.println(currentBoard[4] + " | " + currentBoard[5] + " | " + currentBoard[6] + " | " + currentBoard[7]);
-		}
-		if(rows ==2 && cols==5){
-			System.out.println(currentBoard[0] + " | " + currentBoard[1] + " | " + currentBoard[2] + " | " + currentBoard[3]+ " | " + currentBoard[4]);
-			System.out.println("-----------------");
-			System.out.println(currentBoard[5] + " | " + currentBoard[6] + " | " + currentBoard[7] + " | " + currentBoard[8]+ " | " + currentBoard[9]);
+		//Convert 1D array to 2D array
+		int twoDArray[][] = new int[rows][cols];
+		for(int i=0; i<rows;i++){
+		   for(int j=0;j<cols;j++){
+			   twoDArray[i][j] = currentBoard[j%cols+i*cols];
+		   }
 		}
 		
+		for(int[] row : twoDArray) {
+			for (int index : row) {
+				System.out.print(index);
+				System.out.print("  ");
+			}
+			System.out.println();
+		}
 	}
 	
 	// Equals method to compare two states

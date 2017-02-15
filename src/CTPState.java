@@ -29,19 +29,31 @@ public class CTPState implements State
 	 */
 	public CTPState(int[] times)
 	{
-		//Everyone starts on the left hand side
-		curState = new Direction[]{ Direction.Left, Direction.Left, Direction.Left, Direction.Left, Direction.Left, Direction.Left };
 		this.times = times;
 		n = times.length;
+		curState = new Direction[n];
+		
+		//Everyone starts on the left hand side
+		for (int i=0; i<n; i++)
+		{
+			curState[i]= Direction.Left;
+		}
+		
 	}
 
 
-	//Array containing a state, which has all six positions
+	//Array containing a state, which has all peoples positions
 	public CTPState(int[] times, Direction[] stateArr)
 	{
-		curState = new Direction[]{ stateArr[0], stateArr[1], stateArr[2], stateArr[3], stateArr[4], stateArr[5] };
 		this.times = times;
 		n = times.length;
+		curState = new Direction[n];
+		
+		//Everyone starts on the left hand side
+		for (int i=0; i<n; i++)
+		{
+			curState[i]= stateArr[i];
+		}
 	}
 
 	//Cost to come to this state
@@ -51,7 +63,7 @@ public class CTPState implements State
 		return 1;
 	}
 	
-	//Return the aray of times corresponsding to each person
+	//Return the array of times corresponding to each person
 	public int[] getTimes(){
 		return times;
 	}
@@ -148,30 +160,9 @@ public class CTPState implements State
 	@Override
 	public void printState()
 	{
-		System.out.println("Person 1: " + curState[0]);
-		System.out.println("Person 2: " + curState[1]);
-		System.out.println("Person 3: " + curState[2]);
-		System.out.println("Person 4: " + curState[3]);
-		System.out.println("Person 5: " + curState[4]);
-		System.out.println("Person 6: " + curState[5]);
-		
-		/*String[] leftside = new String[]{"X","X","X","X","X","X"};
-		String bridge = " <--------> ";
-		String[] rightside = new String[]{"X","X","X","X","X","X"};
-		
-		for(int i=0; i<6; i++){
-			if(curState[0].equals(Direction.Left)){
-				leftside[i] = Integer.toString(i + 1);
-			}
-			System.out.print(leftside[i]);
+		for(int i=0; i<n; i++){
+			System.out.println("Person" + Integer.toString(i+1)+ ": " + curState[i]);
 		}
-		System.out.print(bridge);
-		for(int i=0; i<6; i++){
-			if(curState[0].equals(Direction.Right)){
-				rightside[i] = Integer.toString(i + 1);
-			}
-			System.out.print(rightside[i]);
-		}*/
 	}
 
 	/**
@@ -189,5 +180,25 @@ public class CTPState implements State
 		else
 			return false;
 
+	}
+
+
+	@Override
+	public int getOutOfPlace() {
+		return 1;
+	}
+
+
+	@Override
+	public int getManDist() {
+		// TODO Auto-generated method stub
+		return 1;
+	}
+
+
+	@Override
+	public int getAverageHeuristic() {
+		// TODO Auto-generated method stub
+		return 1;
 	}
 }

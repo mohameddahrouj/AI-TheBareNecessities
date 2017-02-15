@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
@@ -12,14 +13,40 @@ import java.util.Stack;
 public class AStarSearch
 {
 	/**
-	 * A* algorithm for SMP A*Search
+	 * Initialize SMP
 	 */
-	public static void search(int[] board, String heuristic, int n, int m)
+	public static void search(String heuristic, int[] board, int[] goal, int n, int m)
 	{
-		SearchNode root = new SearchNode(new SMPState(board, n, m));
+		SearchNode root = new SearchNode(new SMPState(board, goal, n, m, true));
 		Queue<SearchNode> q = new LinkedList<SearchNode>();
+		HashSet<Integer> visitedStates = new HashSet<>();
+		
+		visitedStates.add(root.getCurrentState().hashCode());
 		q.add(root);
 
+		performSearch(heuristic, q, visitedStates);
+	}
+	
+	/**
+	 * Initialize CTP
+	 */
+	public static void search(String heuristic, int[] times)
+	{
+		SearchNode root = new SearchNode(new CTPState(times));
+		Queue<SearchNode> q = new LinkedList<SearchNode>();
+		HashSet<Integer> visitedStates = new HashSet<>();
+		
+		visitedStates.add(root.getCurrentState().hashCode());
+		q.add(root);
+
+		performSearch(heuristic, q, visitedStates);
+	}
+	
+	/**
+	 * A* algorithm
+	 */
+	public static void performSearch(String heuristic, Queue<SearchNode> q, HashSet<Integer> visitedStates)
+	{
 		// counter for number of iterations
 		int searchCount = 1;
 
@@ -29,7 +56,7 @@ public class AStarSearch
 
 			if (!tempNode.getCurrentState().isGoal())
 			{
-				// generate tempNode's immediate possibile moves
+				// generate tempNode's immediate possible moves
 				ArrayList<State> tempSuccessors = tempNode.getCurrentState().generateChildren();
 				ArrayList<SearchNode> nodeSuccessors = new ArrayList<SearchNode>();
 
@@ -51,7 +78,7 @@ public class AStarSearch
 						SearchNode prev = tempNode;
 						State s = tempSuccessors.get(i);
 						double c = tempNode.getCost() + tempSuccessors.get(i).findCost();
-						double h = ((SMPState) tempSuccessors.get(i)).getOutOfPlace();
+						double h = tempSuccessors.get(i).getOutOfPlace();
 						checkedNode = new SearchNode(prev, s, c, h);
 					}
 					if (heuristic == "MANHATTAN")
@@ -62,7 +89,7 @@ public class AStarSearch
 						SearchNode prev = tempNode;
 						State s = tempSuccessors.get(i);
 						double c = tempNode.getCost() + tempSuccessors.get(i).findCost();
-						double h = ((SMPState) tempSuccessors.get(i)).getManDist();
+						double h = tempSuccessors.get(i).getManDist();
 						checkedNode = new SearchNode(prev, s, c, h);
 					}
 					else
@@ -73,15 +100,19 @@ public class AStarSearch
 						SearchNode prev = tempNode;
 						State s = tempSuccessors.get(i);
 						double c = tempNode.getCost() + tempSuccessors.get(i).findCost();
-						double h = ((SMPState) tempSuccessors.get(i)).getAverageHeuristic();
+						double h = tempSuccessors.get(i).getAverageHeuristic();
 						checkedNode = new SearchNode(prev, s, c, h);
 					}
 
 					// Check for repeats before adding the new node
-					if (!wasAlreadyEvaluated(checkedNode))
+					
+					int hashCode = checkedNode.getCurrentState().hashCode();
+					if(!visitedStates.contains(hashCode))
 					{
 						nodeSuccessors.add(checkedNode);
+						visitedStates.add(hashCode);
 					}
+
 				}
 
 				// Check to see if nodeSuccessors is empty. If it is, continue the loop from the top
@@ -146,26 +177,6 @@ public class AStarSearch
 		
 		System.out.println("Error, could not perform A*!");
 
-	}
-
-	// Returns true if SearchNode was evaluated, false if it hasn't
-	private static boolean wasAlreadyEvaluated(SearchNode n)
-	{
-		boolean visited = false;
-		SearchNode checkNode = n;
-
-		// While n's parent isn't null, check to see if it's equal to the node
-		// we're looking for.
-		while (n.getParent() != null && !visited)
-		{
-			if (n.getParent().getCurrentState().equals(checkNode.getCurrentState()))
-			{
-				visited = true;
-			}
-			n = n.getParent();
-		}
-
-		return visited;
 	}
 
 }

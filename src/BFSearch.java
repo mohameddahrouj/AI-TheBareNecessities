@@ -11,9 +11,9 @@ public class BFSearch
 	/**
 	 * Initialize SMP
 	 */
-	public static void search(int[] board, int n, int m)
+	public static void search(int[] board, int[] goal, int n, int m)
 	{
-		SearchNode root = new SearchNode(new SMPState(board, n, m));
+		SearchNode root = new SearchNode(new SMPState(board, goal, n, m, false));
 		Queue<SearchNode> queue = new LinkedList<SearchNode>();
 		HashSet<Integer> visitedStates = new HashSet<>();
 
@@ -35,14 +35,13 @@ public class BFSearch
 		queue.add(root);
 
 		performSearch(queue, visitedStates);
-		//System.out.print
 	}
 
 	/**
 	 * BFS Algorithm
 	 * Search space = queue
 	 */
-	public static void performSearch(Queue<SearchNode> q, HashSet<Integer> visitedStates )
+	public static void performSearch(Queue<SearchNode> q, HashSet<Integer> visitedStates)
 	{
 		//Number of iterations
 		int searchCount = 1;

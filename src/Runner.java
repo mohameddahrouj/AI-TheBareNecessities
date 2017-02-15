@@ -4,6 +4,7 @@ import java.util.Scanner;
  * Prompts user to enter puzzle information
  * Runner class for assignment
  */
+@SuppressWarnings("resource")
 public class Runner
 {	
 	private static String problemType;
@@ -22,15 +23,20 @@ public class Runner
 	
 	private static int[] initSMPState;
 	private static int[] initCTPTimes;
+	private static int[] goalSMPState;
 	
 	public static void main(String[] args)
 	{
 		System.out.println("Welcome to Assignment #1");
 		System.out.println("All Rights Reserved- Mohamed Dahrouj(100951843)\n");
 		getProblemType();
+		//SMP
 		getBoardSizeIfApplicable();
 		getSMPBoardIfApplicable();
+		getSMPGoalBoardIfApplicable();
+		//CTP
 		getCTPTimesIfApplicable();
+		//Search
 		getSearchType();
 		getAStarHeuristicIfApplicable();
 
@@ -39,25 +45,15 @@ public class Runner
 
 			if (searchType.equals(DFS)) //Depth First Search
 			{
-				DFSearch.search(initSMPState, rows, cols);
+				DFSearch.search(initSMPState, goalSMPState, rows, cols);
 			}
 			else if (searchType.equals(BFS)) //Breadth First Search
 			{
-				BFSearch.search(initSMPState, rows, cols);
+				BFSearch.search(initSMPState, goalSMPState, rows, cols);
 			}
 			else if (searchType.equals(ASTAR)) //A* Search
 			{
-				switch(heuristic){
-					case "MANHATTAN":
-					
-						AStarSearch.search(initSMPState, heuristic, rows, cols);
-						
-					case "OUTOFPLACE":
-						AStarSearch.search(initSMPState, heuristic, rows, cols);
-					
-					case "AVERAGE":
-						AStarSearch.search(initSMPState, heuristic, rows, cols);
-				}
+				AStarSearch.search(heuristic, goalSMPState, initSMPState, rows, cols);
 			}
 		}
 
@@ -70,6 +66,10 @@ public class Runner
 			else if (searchType.equals(BFS)) //BFS
 			{
 				BFSearch.search(initCTPTimes);
+			}
+			else if (searchType.equals(ASTAR)) //A* Search
+			{
+				AStarSearch.search(heuristic, initCTPTimes);
 			}
 		}
 	}
@@ -87,7 +87,6 @@ public class Runner
 			System.out.println("Space Management Problem Transportation Problem selected");
 		}
 		problemType = gameType;
-		//problemMode.close();
 	}
 	
 	public static void getBoardSizeIfApplicable(){
@@ -108,7 +107,7 @@ public class Runner
 	private static void getSMPBoardIfApplicable()
 	{
 		if(problemType.equals(SMP)){
-			System.out.print("Please specify the initial board (0-1-2-...9): ");
+			System.out.print("Please specify the initial board (0-1-2-...x): ");
 			Scanner scanner = new Scanner(System.in);
 			String board = scanner.nextLine();
 			String[] boardArray = board.split("-");
@@ -118,7 +117,23 @@ public class Runner
 			{
 				initSMPState[i] = Integer.parseInt(boardArray[i]);
 			}
-			//scanner.close();
+		}
+	}
+	
+	// Helper method to build initial SMP goal board
+	private static void getSMPGoalBoardIfApplicable()
+	{
+		if(problemType.equals(SMP)){
+			System.out.print("Please specify the goal board (0-1-2-...x):    ");
+			Scanner scanner = new Scanner(System.in);
+			String board = scanner.nextLine();
+			String[] boardArray = board.split("-");
+			
+			goalSMPState = new int[boardArray.length];
+			for (int i = 0; i < boardArray.length; i++)
+			{
+				goalSMPState[i] = Integer.parseInt(boardArray[i]);
+			}
 		}
 	}
 	
@@ -136,7 +151,6 @@ public class Runner
 			{
 				initCTPTimes[i] = Integer.parseInt(timeArray[i]);
 			}
-			//scanner.close();
 		}
 	}
 	
@@ -147,7 +161,6 @@ public class Runner
 			String search = scanner.nextLine();
 			
 			searchType = search;
-			//scanner.close();
 	}
 	
 	private static void getAStarHeuristicIfApplicable()
