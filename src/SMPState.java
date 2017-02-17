@@ -294,6 +294,9 @@ public class SMPState implements State
 		return Long.valueOf(result).hashCode();
 	}
 
+	public int getTimeTaken(){
+		return 0;
+	}
 
 	@Override
 	public boolean isGoal()

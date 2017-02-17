@@ -19,7 +19,7 @@ public class BFSearch
 
 		queue.add(root);
 		visitedStates.add(root.getCurrentState().hashCode());
-		performSearch(queue, visitedStates);
+		performSearch(queue, visitedStates, false);
 	}
 
 	/**
@@ -34,14 +34,14 @@ public class BFSearch
 		visitedStates.add(root.getCurrentState().hashCode());
 		queue.add(root);
 
-		performSearch(queue, visitedStates);
+		performSearch(queue, visitedStates, true);
 	}
 
 	/**
 	 * BFS Algorithm
 	 * Search space = queue
 	 */
-	public static void performSearch(Queue<SearchNode> q, HashSet<Integer> visitedStates)
+	public static void performSearch(Queue<SearchNode> q, HashSet<Integer> visitedStates, boolean isCTP)
 	{
 		//Number of iterations
 		int searchCount = 1;
@@ -65,11 +65,19 @@ public class BFSearch
 				{
 					// Second param adds the cost of the new node to the current cost total in the SearchNode
 					SearchNode newNode = new SearchNode(tempNode, tempChildren.get(i), tempNode.getCost() + tempChildren.get(i).findCost(), 0);
-					int hashCode = newNode.getCurrentState().hashCode();
-					if(!visitedStates.contains(hashCode))
-					{
-						q.add(newNode);
-						visitedStates.add(hashCode);
+					if(!isCTP){
+						int hashCode = newNode.getCurrentState().hashCode();
+						if(!visitedStates.contains(hashCode))
+						{
+							q.add(newNode);
+							visitedStates.add(hashCode);
+						}
+					}
+					else{
+						if (!wasAlreadyEvaluated(newNode))
+						{
+							q.add(newNode);
+						}
 					}
 					
 				}
@@ -92,13 +100,19 @@ public class BFSearch
 
 				// Size of stack before looping through and emptying it
 				int loopSize = solutionPath.size();
+				int timeTaken = 0;
 
 				for (int i = 0; i < loopSize; i++)
 				{
 					tempNode = solutionPath.pop();
 					tempNode.getCurrentState().printState();
+					// Gets the time taken for CTP
+					timeTaken = timeTaken + tempNode.getCurrentState().getTimeTaken();
 					System.out.println();
 					System.out.println();
+				}
+				if(isCTP){
+					System.out.println("Total time taken to cross: " + timeTaken);
 				}
 				System.out.println("BFS cost: " + tempNode.getCost());
 				System.out.println("Total nodes processed: "	+ searchCount);
@@ -109,5 +123,23 @@ public class BFSearch
 		
 		//If all else fails
 		System.out.println("Error, could not perform BFS!");
+	}
+	
+	// Returns true if SearchNode was evaluated, false if it hasn't
+	private static boolean wasAlreadyEvaluated(SearchNode node)
+	{
+		boolean visited = false;
+		SearchNode checkNode = node;
+
+		while (node.getParent() != null && !visited)
+		{
+			if (node.getParent().getCurrentState().equals(checkNode.getCurrentState()))
+			{
+				visited = true;
+			}
+			node = node.getParent();
+		}
+
+		return visited;
 	}
 }

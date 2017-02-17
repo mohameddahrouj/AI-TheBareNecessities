@@ -24,7 +24,7 @@ public class AStarSearch
 		visitedStates.add(root.getCurrentState().hashCode());
 		q.add(root);
 
-		performSearch(heuristic, q, visitedStates);
+		performSearch(heuristic, q, visitedStates, false);
 	}
 	
 	/**
@@ -39,13 +39,13 @@ public class AStarSearch
 		visitedStates.add(root.getCurrentState().hashCode());
 		q.add(root);
 
-		performSearch(heuristic, q, visitedStates);
+		performSearch(heuristic, q, visitedStates, true);
 	}
 	
 	/**
 	 * A* algorithm
 	 */
-	public static void performSearch(String heuristic, Queue<SearchNode> q, HashSet<Integer> visitedStates)
+	public static void performSearch(String heuristic, Queue<SearchNode> q, HashSet<Integer> visitedStates, boolean isCTP)
 	{
 		// counter for number of iterations
 		int searchCount = 1;
@@ -105,12 +105,19 @@ public class AStarSearch
 					}
 
 					// Check for repeats before adding the new node
-					
-					int hashCode = checkedNode.getCurrentState().hashCode();
-					if(!visitedStates.contains(hashCode))
-					{
-						nodeSuccessors.add(checkedNode);
-						visitedStates.add(hashCode);
+					if(!isCTP){
+						int hashCode = checkedNode.getCurrentState().hashCode();
+						if(!visitedStates.contains(hashCode))
+						{
+							nodeSuccessors.add(checkedNode);
+							visitedStates.add(hashCode);
+						}
+					}
+					else{
+						if (!checkRepeats(checkedNode))
+						{
+							nodeSuccessors.add(checkedNode);
+						}
 					}
 
 				}
@@ -160,13 +167,19 @@ public class AStarSearch
 
 				// Size of the stack before looping through and emptying it
 				int loopSize = solutionPath.size();
+				int timeTaken = 0;
 
 				for (int i = 0; i < loopSize; i++)
 				{
 					tempNode = solutionPath.pop();
 					tempNode.getCurrentState().printState();
+					// Gets the time taken for CTP
+					timeTaken = timeTaken + tempNode.getCurrentState().getTimeTaken();
 					System.out.println();
 					System.out.println();
+				}
+				if(isCTP){
+					System.out.println("Total time taken to cross: " + timeTaken);
 				}
 				System.out.println("A* cost: " + tempNode.getCost());
 				System.out.println("Total nodes processed: " + searchCount);
@@ -179,4 +192,23 @@ public class AStarSearch
 
 	}
 
+	/*
+	 * Helper method to check to see if a SearchNode has already been evaluated.
+	 */
+	private static boolean checkRepeats(SearchNode n)
+	{
+		boolean repeated = false;
+		SearchNode checkNode = n;
+
+		while (n.getParent() != null && !repeated)
+		{
+			if (n.getParent().getCurrentState().equals(checkNode.getCurrentState()))
+			{
+				repeated = true;
+			}
+			n = n.getParent();
+		}
+
+		return repeated;
+	}
 }

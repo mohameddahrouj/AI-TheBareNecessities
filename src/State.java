@@ -28,6 +28,9 @@ public interface State
 
 	// print the current state
 	public void printState();
+	
+	// Time taken  
+	public int getTimeTaken();
 
 	// compare the actual state data
 	public boolean equals(State s);

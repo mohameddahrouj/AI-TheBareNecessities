@@ -16,12 +16,13 @@ import java.util.Arrays;
 public class CTPState implements State
 {
 	//Goal state- all people end up on the right side of the bridge
-	private final Direction[] GOAL = new Direction[]{ Direction.Right, Direction.Right, Direction.Right, Direction.Right, Direction.Right, Direction.Right };
+	private Direction[] GOAL;
 
 	// The current 4-bit representation of the state
 	public Direction[] curState;
 	
 	private int[] times; 
+	private int timeTaken;
 	private int n;
 
 	/**
@@ -32,6 +33,7 @@ public class CTPState implements State
 		this.times = times;
 		n = times.length;
 		curState = new Direction[n];
+		timeTaken = 0;
 		
 		//Everyone starts on the left hand side
 		for (int i=0; i<n; i++)
@@ -39,20 +41,33 @@ public class CTPState implements State
 			curState[i]= Direction.Left;
 		}
 		
+		//Initialize goal
+		GOAL = new Direction[n];
+		for (int i=0; i<n; i++)
+		{
+			GOAL[i]= Direction.Right;
+		}
+		
 	}
 
-
 	//Array containing a state, which has all peoples positions
-	public CTPState(int[] times, Direction[] stateArr)
+	public CTPState(int[] times, Direction[] stateArr, int timeTaken)
 	{
 		this.times = times;
 		n = times.length;
 		curState = new Direction[n];
-		
+		this.timeTaken = timeTaken;
 		//Everyone starts on the left hand side
 		for (int i=0; i<n; i++)
 		{
 			curState[i]= stateArr[i];
+		}
+		
+		//Initialize goal
+		GOAL = new Direction[n];
+		for (int i=0; i<n; i++)
+		{
+			GOAL[i]= Direction.Right;
 		}
 	}
 
@@ -73,6 +88,10 @@ public class CTPState implements State
 		return curState;
 	}
 	
+	public int getTimeTaken(){
+		return timeTaken;
+	}
+	
 	/**
 	 * Generate all possible successors to the current state.
 	 * Remove successor states that match a state description in the "invalid states" array
@@ -83,43 +102,43 @@ public class CTPState implements State
 		ArrayList<State> successors = new ArrayList<State>();
 		Direction[] tempState = Arrays.copyOf(curState, curState.length);
 		
-		
 		// P1 is on the left
 		if (tempState[0] == Direction.Left)
 		{
 			for (int i = 1; i < n; i++){
 				// he must take a person with him
-				if (tempState[i] == Direction.Left)
-				{
-					tempState[0] = Direction.Right;
-					tempState[i] = Direction.Right;
-					successors.add(new CTPState(times, tempState));
-					tempState = Arrays.copyOf(curState, curState.length);// reset
-				}	
+					if (tempState[i] == Direction.Left)
+					{
+						tempState[0] = Direction.Right;
+						tempState[i] = Direction.Right;
+						
+						successors.add(new CTPState(times, tempState, getMax(times[0], times[i])));
+						tempState = Arrays.copyOf(curState, curState.length);// reset
+					}
 			}
 			// going alone, if we didn't add anything
 			tempState[0] = Direction.Right;
-			successors.add(new CTPState(times, tempState));
+			successors.add(new CTPState(times, tempState, getMax(times[0], 0)));
 			tempState = Arrays.copyOf(curState, curState.length);
 
 		}
 		// if person is on the right
 		else
 		{
-			// he must select an person to take
+			// he must select a person to take
 			for (int i = 1; i < n; i++){
-				// he must take a person with him to the left
-				if (tempState[i] == Direction.Right)
-				{
-					tempState[0] = Direction.Left;
-					tempState[i] = Direction.Left;
-					successors.add(new CTPState(times, tempState));
-					tempState = Arrays.copyOf(curState, curState.length);
-				}
+					// he must take a person with him to the left
+					if (tempState[i] == Direction.Right)
+					{
+						tempState[0] = Direction.Left;
+						tempState[i] = Direction.Left;
+						successors.add(new CTPState(times, tempState, getMax(times[0], times[i])));
+						tempState = Arrays.copyOf(curState, curState.length);
+					}
 			}
 			// going alone
 			tempState[0] = Direction.Left;
-			successors.add(new CTPState(times, tempState));
+			successors.add(new CTPState(times, tempState, getMax(times[0], 0)));
 			tempState = Arrays.copyOf(curState, curState.length);
 
 		}
@@ -136,6 +155,15 @@ public class CTPState implements State
 			return true;
 		}
 		return false;
+	}
+	
+	public int getMax(int num1, int num2){
+	
+		if(num1>num2){
+			return num1;
+		}
+		return num2;
+	
 	}
 
 	@Override
@@ -182,12 +210,18 @@ public class CTPState implements State
 
 	}
 
-
 	@Override
 	public int getOutOfPlace() {
-		return 1;
+		int numOutOfPlace = 0;
+		
+		for (Direction d: curState){
+			if(d.equals(Direction.Left)){
+				numOutOfPlace++;
+			}
+		}
+		
+		return numOutOfPlace;
 	}
-
 
 	@Override
 	public int getManDist() {

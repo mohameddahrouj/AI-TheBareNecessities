@@ -141,7 +141,7 @@ public class Runner
 	private static void getCTPTimesIfApplicable()
 	{
 		if(problemType.equals(CTP)){
-			System.out.print("Please specify the initial times for the six people (1-3-5-...13): ");
+			System.out.print("Please specify the initial times for the any amount of people (1-3-5-...n): ");
 			Scanner scanner = new Scanner(System.in);
 			String times = scanner.nextLine();
 			String[] timeArray = times.split("-");

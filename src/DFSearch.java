@@ -22,7 +22,7 @@ public class DFSearch
 		stack.add(root);
 		visitedStates.add(root.getCurrentState().hashCode());
 
-		performSearch(stack, visitedStates);
+		performSearch(stack, visitedStates, false);
 	}
 
 	/**
@@ -37,14 +37,14 @@ public class DFSearch
 		stack.add(root);
 		visitedStates.add(root.getCurrentState().hashCode());
 
-		performSearch(stack, visitedStates);
+		performSearch(stack, visitedStates, true);
 	}
 
 	/**
 	 * DFS Algorithm
 	 * Search space = s
 	 */
-	public static void performSearch(Stack<SearchNode> s, HashSet<Integer> visitedStates)
+	public static void performSearch(Stack<SearchNode> s, HashSet<Integer> visitedStates, boolean isCTP)
 	{
 		//Number of iterations
 		int searchCount = 1;
@@ -68,12 +68,21 @@ public class DFSearch
 				{
 					// Second param adds the cost of the new node to the current cost total in the SearchNode
 					SearchNode newNode = new SearchNode(tempNode, tempChildren.get(i), tempNode.getCost()	+ tempChildren.get(i).findCost(), 0);
-
-					int hashCode = newNode.getCurrentState().hashCode();
-					if(!visitedStates.contains(hashCode))
-					{
-						s.push(newNode);
-						visitedStates.add(hashCode);
+					
+					if(!isCTP){
+						int hashCode = newNode.getCurrentState().hashCode();
+						if(!visitedStates.contains(hashCode))
+						{
+							s.push(newNode);
+							visitedStates.add(hashCode);
+						}
+					}
+					
+					else{
+						if (!wasAlreadyEvaluated(newNode))
+						{
+							s.push(newNode);
+						}
 					}
 				}
 				searchCount++;
@@ -94,13 +103,19 @@ public class DFSearch
 
 				// Size of stack before looping through and emptying it
 				int loopSize = solutionPath.size();
-
+				int timeTaken = 0;
+				
 				for (int i = 0; i < loopSize; i++)
 				{
 					tempNode = solutionPath.pop();
 					tempNode.getCurrentState().printState();
+					// Gets the time taken for CTP
+					timeTaken = timeTaken + tempNode.getCurrentState().getTimeTaken();
 					System.out.println();
 					System.out.println();
+				}
+				if(isCTP){
+					System.out.println("Total time taken to cross: " + timeTaken);
 				}
 				System.out.println("DFS cost: " + tempNode.getCost());
 				System.out.println("The nodes processed: "	+ searchCount);
@@ -111,5 +126,23 @@ public class DFSearch
 
 		//If all else fails
 		System.out.println("Error, could not perform DFS!");
+	}
+	
+	// Returns true if SearchNode was evaluated, false if it hasn't
+	private static boolean wasAlreadyEvaluated(SearchNode node)
+	{
+		boolean visited = false;
+		SearchNode checkNode = node;
+
+		while (node.getParent() != null && !visited)
+		{
+			if (node.getParent().getCurrentState().equals(checkNode.getCurrentState()))
+			{
+				visited = true;
+			}
+			node = node.getParent();
+		}
+
+		return visited;
 	}
 }
