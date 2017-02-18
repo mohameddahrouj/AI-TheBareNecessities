@@ -174,7 +174,9 @@ public class AStarSearch
 					tempNode = solutionPath.pop();
 					tempNode.getCurrentState().printState();
 					// Gets the time taken for CTP
-					timeTaken = timeTaken + tempNode.getCurrentState().getTimeTaken();
+					if(isCTP){
+						timeTaken = timeTaken + tempNode.getCurrentState().getTimeTaken();
+					}
 					System.out.println();
 					System.out.println();
 				}

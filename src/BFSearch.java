@@ -31,7 +31,6 @@ public class BFSearch
 		Queue<SearchNode> queue = new LinkedList<SearchNode>();
 		HashSet<Integer> visitedStates = new HashSet<>();
 		
-		visitedStates.add(root.getCurrentState().hashCode());
 		queue.add(root);
 
 		performSearch(queue, visitedStates, true);
@@ -107,7 +106,9 @@ public class BFSearch
 					tempNode = solutionPath.pop();
 					tempNode.getCurrentState().printState();
 					// Gets the time taken for CTP
-					timeTaken = timeTaken + tempNode.getCurrentState().getTimeTaken();
+					if(isCTP){
+						timeTaken = timeTaken + tempNode.getCurrentState().getTimeTaken();
+					}
 					System.out.println();
 					System.out.println();
 				}
