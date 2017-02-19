@@ -17,7 +17,7 @@ public class AStarSearch
 	 */
 	public static void search(String heuristic, int[] board, int[] goal, int n, int m)
 	{
-		SearchNode root = new SearchNode(new SMPState(board, goal, n, m, true));
+		SearchNode root = new SearchNode(new SMPState(board, goal, n, m));
 		Queue<SearchNode> q = new LinkedList<SearchNode>();
 		HashSet<Integer> visitedStates = new HashSet<>();
 		
@@ -74,7 +74,7 @@ public class AStarSearch
 					{
 						//Create new SearchNode with tempNode as the parent,
 						//tempNode's cost in addition to the new cost for temp state
-						//and the Manhattan h(n) value
+						//and the Out of place h(n) value
 						SearchNode prev = tempNode;
 						State s = tempSuccessors.get(i);
 						double c = tempNode.getCost() + tempSuccessors.get(i).findCost();

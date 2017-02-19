@@ -13,7 +13,7 @@ public class BFSearch
 	 */
 	public static void search(int[] board, int[] goal, int n, int m)
 	{
-		SearchNode root = new SearchNode(new SMPState(board, goal, n, m, false));
+		SearchNode root = new SearchNode(new SMPState(board, goal, n, m));
 		Queue<SearchNode> queue = new LinkedList<SearchNode>();
 		HashSet<Integer> visitedStates = new HashSet<>();
 

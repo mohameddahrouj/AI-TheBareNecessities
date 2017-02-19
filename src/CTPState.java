@@ -47,7 +47,6 @@ public class CTPState implements State
 		{
 			GOAL[i]= Direction.Right;
 		}
-		
 	}
 
 	//Array containing a state, which has all peoples positions
@@ -225,14 +224,24 @@ public class CTPState implements State
 
 	@Override
 	public int getManDist() {
-		// TODO Auto-generated method stub
-		return 1;
+		int time = 0;
+		//go through all people except first who is the slowest
+		for (int i = n - 1; i >= 1; i--){
+			//Slowest person goes
+			time += times[i];
+			//Fastest person (first person) comes back
+			time += times[0];
+			//if last person in list
+			if(i==1){
+				time -= times[0];
+			}
+		}
+		return time;
 	}
 
 
 	@Override
 	public int getAverageHeuristic() {
-		// TODO Auto-generated method stub
-		return 1;
+		return (getOutOfPlace() + getManDist())/2;
 	}
 }

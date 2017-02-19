@@ -12,18 +12,10 @@ import java.util.Arrays;
  */
 public class SMPState implements State
 {
-	//Default 3x3
 	private int PUZZLE_SIZE = 9;
-	
-	//A* Heuristics
-	private int outOfPlace = 0;
-	private int manDist = 0;
-	private int averageHeuristic = 0;
 
 	private int[] goal;
 	private int[] currentBoard;
-	
-	private boolean isAStar;
 	
 	private int rows;
 	private int cols;
@@ -31,22 +23,14 @@ public class SMPState implements State
 	// Constructor
 	// board = representation for the new state to be constructed
 	// n,m board size
-	public SMPState(int[] board, int[] goal, int rows, int cols, boolean isAStar)
+	public SMPState(int[] board, int[] goal, int rows, int cols)
 	{
 		this.currentBoard = board;
 		this.goal = goal;
 		this.rows = rows;
 		this.cols = cols;
-		this.isAStar = isAStar;
-		//Calculate puzzle size if different than 3x3
+		//Calculate puzzle size
 		PUZZLE_SIZE = rows*cols;
-		
-		if(isAStar){
-			//Set AStar Heuristics
-			setOutOfPlace();
-			setManDist();
-			setAverageHeuristic();
-		}
 	}
 
 	@Override
@@ -57,8 +41,10 @@ public class SMPState implements State
 
 	//Set the 'tiles out of place' distance for the current board
 	// Used for A* - h1(n) value
-	private void setOutOfPlace()
+	@Override
+	public int getOutOfPlace()
 	{
+		int outOfPlace = 0;
 		for (int i = 0; i < currentBoard.length; i++)
 		{
 			if (currentBoard[i] != goal[i])
@@ -66,13 +52,16 @@ public class SMPState implements State
 				outOfPlace++;
 			}
 		}
+		return outOfPlace;
 	}
 
 	
 	// Set the Manhattan Distance for the current board
 	// Used for A* - h2(n) value
-	private void setManDist()
+	@Override
+	public int getManDist()
 	{
+		int manDist = 0;
 		// linearly search the array independent of the nested for's below
 		int index = -1;
 
@@ -108,13 +97,15 @@ public class SMPState implements State
 				// If we are looking at the hole, skip it
 			}
 		}
+		return manDist;
 	}
 	
 	//Set the 'average' of h1 and h2 for the current board
 	// Used for A* - h3(n) value
-	private void setAverageHeuristic()
+	@Override
+	public int getAverageHeuristic()
 	{
-		averageHeuristic = (outOfPlace + manDist)/2;
+		return (getOutOfPlace() + getManDist())/2;
 	}
 
 	// Find and return index of hole
@@ -128,27 +119,6 @@ public class SMPState implements State
 				holeIndex = i;
 		}
 		return holeIndex;
-	}
-
-	// Return the h1(n) value
-	@Override
-	public int getOutOfPlace()
-	{
-		return outOfPlace;
-	}
-
-	// Return the h2(n) value
-	@Override
-	public int getManDist()
-	{
-		return manDist;
-	}
-	
-	// Return the h3(n) value
-	@Override
-	public int getAverageHeuristic()
-	{
-		return averageHeuristic;
 	}
 	
 	public int[] getCurBoard()
@@ -279,7 +249,7 @@ public class SMPState implements State
 		int temp = copy[p1];
 		copy[p1] = currentBoard[p2];
 		copy[p2] = temp;
-		s.add((new SMPState(copy, goal, rows, cols, isAStar)));
+		s.add((new SMPState(copy, goal, rows, cols)));
 	}
 	
 	public int hashCode()
