@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Used to store old and new indicies when generating possible children moves
@@ -6,28 +8,17 @@
  */
 public class Move {
 
-	int oldIndex;
-	int newIndex;
-	
-	public Move(int newIndex, int oldIndex){
-		this.oldIndex = oldIndex;
-		this.newIndex = newIndex;
-	}
-	
-	public int getOldIndex() {
-		return oldIndex;
-	}
-	
-	public void setOldIndex(int oldIndex) {
-		this.oldIndex = oldIndex;
-	}
-	
-	public int getNewIndex() {
-		return newIndex;
-	}
-	
-	public void setNewIndex(int newIndex) {
-		this.newIndex = newIndex;
-	}
-	
+    private List<Person> people;
+    public int transportationTime;
+
+    public Move(List<Person> people, int transportationTime)
+    {
+        this.people = new ArrayList<>(people);
+        this.transportationTime = transportationTime;
+    }
+
+    public List<Person> getPeople()
+    {
+        return this.people;
+    }
 }

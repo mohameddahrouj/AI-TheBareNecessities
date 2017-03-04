@@ -1,33 +1,35 @@
-public class Person {
-	
-	Direction direction;
-	boolean hasTorch;
-	
-	//Constructor for initialization
-	public Person(){
-		this.direction = Direction.Left;
-		this.hasTorch = false;
-	}
-	
-	public Person(Direction direction){
-		this.direction = direction;
-		this.hasTorch = false;
-	}
-	
-	public Direction getDirection(){
-		return direction;
-	}
-	
-	public void setDirection(Direction direction){
-		this.direction = direction;
-	}
-	
-	public void setHasTorch(boolean hasTorch){
-		this.hasTorch = hasTorch;
-	}
-	
-	public boolean getHasTorch(){
-		return hasTorch;
-	}
+
+
+
+public class Person implements Comparable<Person> {
+
+    private int crossingTime;
+    private String name;
+
+    public Person(String name, int crossingTime)
+    {
+        this.crossingTime = crossingTime;
+
+        this.name = name;
+    }
+
+    public String getName()
+    {
+        return this.name;
+    }
+
+    public int getCrossingTime()
+    {
+        return  this.crossingTime;
+    }
+
+    public String toString()
+    {
+        return this.crossingTime + "";
+    }
+
+    public int compareTo(Person other) {
+        return Integer.compare(this.crossingTime, other.crossingTime);
+    }
 
 }

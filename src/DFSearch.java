@@ -28,9 +28,9 @@ public class DFSearch
 	/**
 	 * Initialize CTP
 	 */
-	public static void search(int[] times)
+	public static void search(ArrayList<Person> leftSide)
 	{
-		SearchNode root = new SearchNode(new CTPState(times));
+		SearchNode root = new SearchNode(new CTPState(leftSide, new ArrayList<Person>(), Direction.Left, 0, 0, null, Heuristic.NONE));
 		Stack<SearchNode> stack = new Stack<SearchNode>();
  
 		HashSet<Integer> visitedStates = new HashSet<>();
@@ -69,20 +69,11 @@ public class DFSearch
 					// Second param adds the cost of the new node to the current cost total in the SearchNode
 					SearchNode newNode = new SearchNode(tempNode, tempChildren.get(i), tempNode.getCost()	+ tempChildren.get(i).findCost(), 0);
 					
-					if(!isCTP){
-						int hashCode = newNode.getCurrentState().hashCode();
-						if(!visitedStates.contains(hashCode))
-						{
-							s.push(newNode);
-							visitedStates.add(hashCode);
-						}
-					}
-					
-					else{
-						if (!wasAlreadyEvaluated(newNode))
-						{
-							s.push(newNode);
-						}
+					int hashCode = newNode.getCurrentState().hashCode();
+					if(!visitedStates.contains(hashCode))
+					{
+						s.push(newNode);
+						visitedStates.add(hashCode);
 					}
 				}
 				searchCount++;
@@ -110,7 +101,7 @@ public class DFSearch
 					tempNode = solutionPath.pop();
 					tempNode.getCurrentState().printState();
 					// Gets the time taken for CTP
-					if(isCTP){
+					if(isCTP && i == loopSize-1){
 						timeTaken = timeTaken + tempNode.getCurrentState().getTimeTaken();
 					}
 					System.out.println();
@@ -128,23 +119,5 @@ public class DFSearch
 
 		//If all else fails
 		System.out.println("Error, could not perform DFS!");
-	}
-	
-	// Returns true if SearchNode was evaluated, false if it hasn't
-	private static boolean wasAlreadyEvaluated(SearchNode node)
-	{
-		boolean visited = false;
-		SearchNode checkNode = node;
-
-		while (node.getParent() != null && !visited)
-		{
-			if (node.getParent().getCurrentState().equals(checkNode.getCurrentState()))
-			{
-				visited = true;
-			}
-			node = node.getParent();
-		}
-
-		return visited;
 	}
 }

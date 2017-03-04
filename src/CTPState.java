@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * Commodity transportation problem
@@ -13,235 +12,289 @@ import java.util.Arrays;
  * @author Mohamed Dahrouj
  * 
  */
-public class CTPState implements State
-{
-	//Goal state- all people end up on the right side of the bridge
-	private Direction[] GOAL;
 
-	// The current 4-bit representation of the state
-	public Direction[] curState;
-	
-	private int[] times; 
-	private int timeTaken;
-	private int n;
+import java.util.*;
 
-	/**
-	 * Default Constructor
-	 */
-	public CTPState(int[] times)
-	{
-		this.times = times;
-		n = times.length;
-		curState = new Direction[n];
-		timeTaken = 0;
-		
-		//Everyone starts on the left hand side
-		for (int i=0; i<n; i++)
-		{
-			curState[i]= Direction.Left;
-		}
-		
-		//Initialize goal
-		GOAL = new Direction[n];
-		for (int i=0; i<n; i++)
-		{
-			GOAL[i]= Direction.Right;
-		}
-	}
+public class CTPState implements State {
 
-	//Array containing a state, which has all peoples positions
-	public CTPState(int[] times, Direction[] stateArr, int timeTaken)
-	{
-		this.times = times;
-		n = times.length;
-		curState = new Direction[n];
-		this.timeTaken = timeTaken;
-		//Everyone starts on the left hand side
-		for (int i=0; i<n; i++)
-		{
-			curState[i]= stateArr[i];
-		}
-		
-		//Initialize goal
-		GOAL = new Direction[n];
-		for (int i=0; i<n; i++)
-		{
-			GOAL[i]= Direction.Right;
-		}
-	}
+    private ArrayList<Person> leftSide;
+    private ArrayList<Person> rightSide;
+    private Direction torch;
+    private int time;
+    private int stateValue;
+    private int level;
+    private Heuristic heuristic;
+    private State previousState;
 
-	//Cost to come to this state
+    public CTPState(ArrayList<Person> leftSide, ArrayList<Person> rightSide, Direction torch, int time, int level, State prevState, Heuristic heuristic)
+    {
+        this.leftSide = new ArrayList<>(leftSide);
+        this.rightSide = new ArrayList<>(rightSide);
+        this.time = time;
+        this.torch = torch;
+        this.level = level;
+        this.previousState = prevState;
+        this.heuristic = heuristic;
+        setValue();
+    }
+
+    public boolean isSolved()
+    {
+        return this.leftSide.isEmpty();
+    }
+
+    @Override
+    public void setStateValue(int value)
+    {
+        this.stateValue = value;
+    }
+    
+    public ArrayList<Person> getLeftSide(){
+    	return leftSide;
+    }
+    
+    public ArrayList<Person> getRightSide(){
+    	return rightSide;
+    }
+
+    private ArrayList<Move> generateAllMoves()
+    {
+        if(torch.equals(Direction.Left))
+             return generateAllLeftToRightMoves();
+
+        return generateAllRightToLeftMoves();
+    }
+
+    private ArrayList<Move> generateAllLeftToRightMoves()
+    {
+    	ArrayList<Move> moves = new ArrayList<>();
+        for(int i = 0; i<this.leftSide.size() -1; i++) {
+            Person person1 = this.leftSide.get(i);
+            for (int j = i + 1; j < this.leftSide.size(); j++) {
+                Person person2 = this.leftSide.get(j);
+                int transportationTime = getTransportationTime(person1,person2);
+                ArrayList<Person> people = new ArrayList<>();
+                people.add(person1);
+                people.add(person2);
+                moves.add(new Move(people,transportationTime));
+            }
+        }
+        return moves;
+    }
+
+    private ArrayList<Move> generateAllRightToLeftMoves()
+    {
+    	ArrayList<Move> moves = new ArrayList<>();
+        for(int i = 0; i<this.rightSide.size() -1; i++) {
+            Person person1 = this.rightSide.get(i);
+            int transportationTime = person1.getCrossingTime();
+            ArrayList<Person> people = new ArrayList<>();
+            people.add(person1);
+            moves.add(new Move(people, transportationTime));
+
+        }
+        return moves;
+    }
+
+    private void setValue() {
+
+        int heuristicValue;
+        if (this.heuristic.equals(Heuristic.MANHATTAN))
+            heuristicValue = getManDist();
+        else if (this.heuristic.equals(Heuristic.OUTOFPLACE))
+            heuristicValue = getOutOfPlace();
+        else if (this.heuristic.equals(Heuristic.AVERAGE))
+            heuristicValue = getAverageHeuristic();
+        else
+        	heuristicValue = 1;
+        
+        this.stateValue = heuristicValue + this.level;
+    }
+
+    public int getStateValue()
+    {
+        return this.stateValue;
+    }
+
+    @Override
+    public void setPreviousState(State previousState)
+    {
+        this.previousState = previousState;
+    }
+
+    private CTPState applyMove(Move move, State prevState)
+    {
+        Move transportationMove = move;
+
+        if(this.torch.equals(Direction.Left))
+        {
+            CTPState newState = new CTPState(
+                    this.leftSide,
+                    this.rightSide,
+                    Direction.Right,
+                    this.time,
+                    this.level + transportationMove.transportationTime,
+                    prevState,
+                    this.heuristic);
+            newState.leftSide.removeAll(transportationMove.getPeople());
+            newState.rightSide.addAll(transportationMove.getPeople());
+            newState.time += transportationMove.transportationTime;
+            newState.setValue();
+            return newState;
+        }
+        else {
+            CTPState newState = new CTPState(
+                    this.leftSide,
+                    this.rightSide,
+                    Direction.Left,
+                    this.time,
+                    this.level + transportationMove.transportationTime,
+                    prevState,
+                    this.heuristic);
+            newState.rightSide.removeAll(transportationMove.getPeople());
+            newState.leftSide.addAll(transportationMove.getPeople());
+            newState.time += transportationMove.transportationTime;
+            newState.setValue();
+            return newState;
+        }
+    }
+
+    private int getTransportationTime(Person person1, Person person2)
+    {
+        int person1CrossingTime = person1.getCrossingTime();
+        int person2CrossingTime = person2.getCrossingTime();
+
+        if(person1CrossingTime > person2CrossingTime)
+        {
+            return person1CrossingTime;
+        }
+
+        return person2CrossingTime;
+    }
+
+    private String getTorchLocation()
+    {
+        if(torch.equals(Direction.Left))
+            return "Left";
+        return "Right";
+    }
+
+    @Override
+    public State getPreviousState()
+    {
+        return this.previousState;
+    }
+
 	@Override
-	public double findCost()
-	{
-		return 1;
-	}
-	
-	//Return the array of times corresponding to each person
-	public int[] getTimes(){
-		return times;
-	}
-	
-	public Direction[] getCurState()
-	{
-		return curState;
-	}
-	
-	public int getTimeTaken(){
-		return timeTaken;
-	}
-	
-	/**
-	 * Generate all possible successors to the current state.
-	 * Remove successor states that match a state description in the "invalid states" array
-	 */
-	@Override
-	public ArrayList<State> generateChildren()
-	{
-		ArrayList<State> successors = new ArrayList<State>();
-		Direction[] tempState = Arrays.copyOf(curState, curState.length);
-		
-		// P1 is on the left
-		if (tempState[0] == Direction.Left)
-		{
-			for (int i = 1; i < n; i++){
-				// he must take a person with him
-					if (tempState[i] == Direction.Left)
-					{
-						tempState[0] = Direction.Right;
-						tempState[i] = Direction.Right;
-						
-						successors.add(new CTPState(times, tempState, getMax(times[0], times[i])));
-						tempState = Arrays.copyOf(curState, curState.length);// reset
-					}
-			}
-			// going alone, if we didn't add anything
-			tempState[0] = Direction.Right;
-			successors.add(new CTPState(times, tempState, getMax(times[0], 0)));
-			tempState = Arrays.copyOf(curState, curState.length);
-
-		}
-		// if person is on the right
-		else
-		{
-			// he must select a person to take
-			for (int i = 1; i < n; i++){
-					// he must take a person with him to the left
-					if (tempState[i] == Direction.Right)
-					{
-						tempState[0] = Direction.Left;
-						tempState[i] = Direction.Left;
-						successors.add(new CTPState(times, tempState, getMax(times[0], times[i])));
-						tempState = Arrays.copyOf(curState, curState.length);
-					}
-			}
-			// going alone
-			tempState[0] = Direction.Left;
-			successors.add(new CTPState(times, tempState, getMax(times[0], 0)));
-			tempState = Arrays.copyOf(curState, curState.length);
-
-		}
-		return successors;
-	}
-
-	
-	// Check to see if the current state is the goal state.
-	@Override
-	public boolean isGoal()
-	{
-		if (Arrays.equals(curState, GOAL))
-		{
-			return true;
-		}
-		return false;
-	}
-	
-	public int getMax(int num1, int num2){
-	
-		if(num1>num2){
-			return num1;
-		}
-		return num2;
-	
+	public boolean isGoal() {
+		return this.leftSide.isEmpty();
 	}
 
 	@Override
-	public boolean equals(Object obj)
-	{
-		if (this == obj)
-			return true;
-		else if (obj == null)
-			return false;
-		else if (getClass() != obj.getClass())
-			return false;
-		CTPState other = (CTPState) obj;
-		if (!curState.equals(other.curState))
-			return false;
-		return true;
+	public ArrayList<State> generateChildren() {
+        ArrayList<State> productionSystemHashSet = new ArrayList<>();
+
+        for(Move move: generateAllMoves())
+        {
+            productionSystemHashSet.add(applyMove(move, this));
+        }
+
+        return productionSystemHashSet;
 	}
 
-	/**
-	 * Method to print out the current state. Prints the current position of
-	 * each person.
-	 */
+	// f = g + h(n)
 	@Override
-	public void printState()
-	{
-		for(int i=0; i<n; i++){
-			System.out.println("Person" + Integer.toString(i+1)+ ": " + curState[i]);
-		}
-	}
+	public double findCost() {
 
-	/**
-	 * Overloaded equals method to compare two states.
-	 * 
-	 * @return true or false, depending on whether the states are equal
-	 */
-	@Override
-	public boolean equals(State s)
-	{
-		if (Arrays.equals(curState, ((CTPState) s).getCurState()))
-		{
-			return true;
-		}
-		else
-			return false;
-
+		return stateValue;
 	}
 
 	@Override
 	public int getOutOfPlace() {
-		int numOutOfPlace = 0;
 		
-		for (Direction d: curState){
-			if(d.equals(Direction.Left)){
-				numOutOfPlace++;
-			}
-		}
-		
-		return numOutOfPlace;
+		//Max crossing time
+        int max = 0;
+
+        for (Person person: leftSide) {
+
+            int crossingTime = person.getCrossingTime();
+            if(crossingTime > max)
+                max = crossingTime;
+        }
+
+        return max;
 	}
 
 	@Override
 	public int getManDist() {
-		int time = 0;
-		//go through all people except first who is the slowest
-		for (int i = n - 1; i >= 1; i--){
-			//Slowest person goes
-			time += times[i];
-			//Fastest person (first person) comes back
-			time += times[0];
-			//if last person in list
-			if(i==1){
-				time -= times[0];
-			}
-		}
-		return time;
-	}
+		
+		// N crossing time 
+		int n = this.leftSide.size()/2;
+        int counter = this.leftSide.size()-1;
+        int sumN = 0;
+        //Sort to increasing order
+        Collections.sort(this.leftSide);
 
+        while(n>0)
+        {
+            sumN+= this.leftSide.get(counter).getCrossingTime();
+            counter--;
+            n--;
+        }
+
+        return sumN;
+	}
 
 	@Override
 	public int getAverageHeuristic() {
 		return (getOutOfPlace() + getManDist())/2;
+	}
+
+	@Override
+	public void printState() {
+		
+		StringBuilder builder = new StringBuilder();
+        builder.append("Left: ");
+        for (Person person: this.leftSide) {
+            builder.append(person.getCrossingTime() + " ");
+        }
+
+        builder.append("\nRight: ");
+
+        for (Person person: this.rightSide) {
+            builder.append(person.getCrossingTime() + " ");
+        }
+        
+        builder.append("\nTorch Location: " + getTorchLocation());
+        builder.append("\nTime Elapsed: " + this.time);
+        System.out.println(builder);
+		
+	}
+	
+	public String toString() {
+		
+		StringBuilder builder = new StringBuilder();
+        builder.append("Left: ");
+        for (Person person: this.leftSide) {
+            builder.append(person.getCrossingTime() + " ");
+        }
+
+        builder.append("\nRight: ");
+
+        for (Person person: this.rightSide) {
+            builder.append(person.getCrossingTime() + " ");
+        }
+        
+        builder.append("\nTorch Location: " + getTorchLocation());
+        builder.append("\nTime Elapsed: " + this.time);
+        builder.append("\n");
+        builder.append("\n");
+        return builder.toString();
+		
+	}
+
+	@Override
+	public int getTimeTaken() {
+		return time;
 	}
 }

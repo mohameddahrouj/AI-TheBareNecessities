@@ -61,43 +61,25 @@ public class SMPState implements State
 	@Override
 	public int getManDist()
 	{
-		int manDist = 0;
-		// linearly search the array independent of the nested for's below
-		int index = -1;
-
-		// just keeps track of where we are on the board (relatively, can't use
-		// 0 so these
-		// values need to be shifted to the right one place)
-		for (int y = 0; y < rows; y++)
+		int value = 0;
+		
+		for (int i = 0; i < currentBoard.length; i++)
 		{
-			for (int x = 0; x < cols; x++)
+			if(this.currentBoard[i] != i)
 			{
-				index++;
-
-				// sub 1 from the val to get the index of where that value
-				// should be
-				int val = (currentBoard[index] - 1);
-
-				/*
-				 * If we're not looking at the hole. The hole will be at
-				 * location -1 since we subtracted 1 before to turn val into the
-				 * index
-				 */
-				if (val != -1)
-				{
-					// Horizontal offset, mod the tile value by the horizontal
-					// dimension
-					int horiz = val % rows;
-					// Vertical offset, divide the tile value by the vertical
-					// dimension
-					int vert = val / cols;
-
-					manDist += Math.abs(vert - (y)) + Math.abs(horiz - (x));
-				}
-				// If we are looking at the hole, skip it
+				int col = i % cols;
+				int goalCol = this.currentBoard[i] % cols;
+				
+				int row = i / this.cols;
+				int goalRow = this.currentBoard[i] / cols;
+				
+				if(row != goalRow)
+					value++;
+				if(col != goalCol)
+					value++;
 			}
 		}
-		return manDist;
+		return value;
 	}
 	
 	//Set the 'average' of h1 and h2 for the current board
@@ -300,18 +282,23 @@ public class SMPState implements State
 			System.out.println();
 		}
 	}
-	
-	// Equals method to compare two states
-	@Override
-	public boolean equals(State s)
-	{
-		if (Arrays.equals(currentBoard, ((SMPState) s).getCurBoard()))
-		{
-			return true;
-		}
-		else
-			return false;
 
+	@Override
+	public void setStateValue(int stateValue) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public State getPreviousState() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setPreviousState(State State) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

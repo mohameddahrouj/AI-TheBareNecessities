@@ -25,14 +25,14 @@ public class BFSearch
 	/**
 	 * Initialize CTP
 	 */
-	public static void search(int[] times)
+	public static void search(ArrayList<Person> leftSide)
 	{
-		SearchNode root = new SearchNode(new CTPState(times));
+		SearchNode root = new SearchNode(new CTPState(leftSide, new ArrayList<Person>(), Direction.Left, 0, 0, null, Heuristic.NONE));
 		Queue<SearchNode> queue = new LinkedList<SearchNode>();
 		HashSet<Integer> visitedStates = new HashSet<>();
 		
 		queue.add(root);
-
+		visitedStates.add(root.getCurrentState().hashCode());
 		performSearch(queue, visitedStates, true);
 	}
 
@@ -64,19 +64,11 @@ public class BFSearch
 				{
 					// Second param adds the cost of the new node to the current cost total in the SearchNode
 					SearchNode newNode = new SearchNode(tempNode, tempChildren.get(i), tempNode.getCost() + tempChildren.get(i).findCost(), 0);
-					if(!isCTP){
-						int hashCode = newNode.getCurrentState().hashCode();
-						if(!visitedStates.contains(hashCode))
-						{
-							q.add(newNode);
-							visitedStates.add(hashCode);
-						}
-					}
-					else{
-						if (!wasAlreadyEvaluated(newNode))
-						{
-							q.add(newNode);
-						}
+					int hashCode = newNode.getCurrentState().hashCode();
+					if(!visitedStates.contains(hashCode))
+					{
+						q.add(newNode);
+						visitedStates.add(hashCode);
 					}
 					
 				}
@@ -106,7 +98,7 @@ public class BFSearch
 					tempNode = solutionPath.pop();
 					tempNode.getCurrentState().printState();
 					// Gets the time taken for CTP
-					if(isCTP){
+					if(isCTP && i == loopSize-1){
 						timeTaken = timeTaken + tempNode.getCurrentState().getTimeTaken();
 					}
 					System.out.println();
@@ -124,23 +116,5 @@ public class BFSearch
 		
 		//If all else fails
 		System.out.println("Error, could not perform BFS!");
-	}
-	
-	// Returns true if SearchNode was evaluated, false if it hasn't
-	private static boolean wasAlreadyEvaluated(SearchNode node)
-	{
-		boolean visited = false;
-		SearchNode checkNode = node;
-
-		while (node.getParent() != null && !visited)
-		{
-			if (node.getParent().getCurrentState().equals(checkNode.getCurrentState()))
-			{
-				visited = true;
-			}
-			node = node.getParent();
-		}
-
-		return visited;
 	}
 }

@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -15,7 +16,7 @@ public class Runner
 	private static String BFS = "BFS";
 	private static String DFS = "DFS";
 	private static String ASTAR = "A*";
-	private static String heuristic;
+	private static Heuristic heuristic;
 	
 	//If applicable
 	private static int rows;
@@ -23,6 +24,7 @@ public class Runner
 	
 	private static int[] initSMPState;
 	private static int[] initCTPTimes;
+	private static ArrayList<Person> people;
 	private static int[] goalSMPState;
 	
 	public static void main(String[] args)
@@ -53,7 +55,7 @@ public class Runner
 			}
 			else if (searchType.equals(ASTAR)) //A* Search
 			{
-				AStarSearch.search(heuristic, goalSMPState, initSMPState, rows, cols);
+				AStarSearch.search(heuristic, initSMPState, goalSMPState, rows, cols);
 			}
 		}
 
@@ -61,15 +63,15 @@ public class Runner
 		{
 			if (searchType.equals(DFS)) //DFS
 			{
-				DFSearch.search(initCTPTimes);
+				DFSearch.search(people);
 			}
 			else if (searchType.equals(BFS)) //BFS
 			{
-				BFSearch.search(initCTPTimes);
+				BFSearch.search(people);
 			}
 			else if (searchType.equals(ASTAR)) //A* Search
 			{
-				AStarSearch.search(heuristic, initCTPTimes);
+				AStarSearch.search(people, heuristic);
 			}
 		}
 	}
@@ -151,6 +153,14 @@ public class Runner
 			{
 				initCTPTimes[i] = Integer.parseInt(timeArray[i]);
 			}
+			
+	        people = new ArrayList<>();
+
+	        for(int i = 0; i<initCTPTimes.length; i++)
+	        {
+	            people.add(new Person("a" + i, initCTPTimes[i]));
+	        }
+			
 		}
 	}
 	
@@ -166,12 +176,29 @@ public class Runner
 	private static void getAStarHeuristicIfApplicable()
 	{
 		if(searchType.equals("A*")){
-			System.out.print("Please specify A* Heuristic (MANHATTAN|OUTOFPLACE|AVERAGE): ");
+			if(problemType.equals(CTP)){
+				System.out.println("Heuristics: 1 = Slowest 50 percentile on left | 2 = Time of people on left");
+			}
+			if(problemType.equals(SMP)){
+				System.out.println("Heuristics: 1 = Tiles out of row/column | 2 = Tiles out of place");
+			}
+			System.out.print("Please specify A* Heuristic (1 | 2 | AVERAGE): ");
 			Scanner scanner = new Scanner(System.in);
 			String hrstc = scanner.nextLine();
 			
-			heuristic = hrstc;
-			scanner.close();
+			if(hrstc.equals("1")){
+				heuristic = Heuristic.MANHATTAN;
+			}
+			else if(hrstc.equals("2")){
+				heuristic = Heuristic.OUTOFPLACE;
+			}
+			else if(hrstc.equals("AVERAGE")){
+				heuristic = Heuristic.AVERAGE;
+			}
+			else{
+				heuristic = Heuristic.NONE;
+			}
+			
 		}
 	}
 }

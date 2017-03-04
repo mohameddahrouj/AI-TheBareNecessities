@@ -1,6 +1,9 @@
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -15,7 +18,7 @@ public class AStarSearch
 	/**
 	 * Initialize SMP
 	 */
-	public static void search(String heuristic, int[] board, int[] goal, int n, int m)
+	public static void search(Heuristic heuristic, int[] board, int[] goal, int n, int m)
 	{
 		SearchNode root = new SearchNode(new SMPState(board, goal, n, m));
 		Queue<SearchNode> q = new LinkedList<SearchNode>();
@@ -24,28 +27,27 @@ public class AStarSearch
 		visitedStates.add(root.getCurrentState().hashCode());
 		q.add(root);
 
-		performSearch(heuristic, q, visitedStates, false);
+		performSearch(heuristic, q, visitedStates);
 	}
 	
 	/**
 	 * Initialize CTP
 	 */
-	public static void search(String heuristic, int[] times)
-	{
-		SearchNode root = new SearchNode(new CTPState(times));
-		Queue<SearchNode> q = new LinkedList<SearchNode>();
-		HashSet<Integer> visitedStates = new HashSet<>();
-		
-		visitedStates.add(root.getCurrentState().hashCode());
-		q.add(root);
+	public static void search(ArrayList<Person> leftSide, Heuristic heuristic)
+	{   
+		SearchNode root = new SearchNode(new CTPState(leftSide, new ArrayList<Person>(), Direction.Left, 0, 0, null, heuristic));
 
-		performSearch(heuristic, q, visitedStates, true);
+		State finalState = performSearch(heuristic, root.getCurrentState());
+		
+        String solved = getPathToSuccess(finalState);
+        
+        System.out.println(solved);
 	}
 	
 	/**
 	 * A* algorithm
 	 */
-	public static void performSearch(String heuristic, Queue<SearchNode> q, HashSet<Integer> visitedStates, boolean isCTP)
+	public static void performSearch(Heuristic heuristic, Queue<SearchNode> q, HashSet<Integer> visitedStates)
 	{
 		// counter for number of iterations
 		int searchCount = 1;
@@ -69,55 +71,36 @@ public class AStarSearch
 				for (int i = 0; i < tempSuccessors.size(); i++)
 				{
 					SearchNode checkedNode;
+					//Create new SearchNode with tempNode as the parent,
+					//tempNode's cost in addition to the new cost for temp state
+					//and the Out of place h(n) value
+					SearchNode prev = tempNode;
+					State s = tempSuccessors.get(i);
+					double c = tempNode.getCost() + tempSuccessors.get(i).findCost();
+					
 					// make the node
-					if (heuristic == "OUTOFPLACE")
+					if (heuristic.equals(Heuristic.OUTOFPLACE))
 					{
-						//Create new SearchNode with tempNode as the parent,
-						//tempNode's cost in addition to the new cost for temp state
-						//and the Out of place h(n) value
-						SearchNode prev = tempNode;
-						State s = tempSuccessors.get(i);
-						double c = tempNode.getCost() + tempSuccessors.get(i).findCost();
 						double h = tempSuccessors.get(i).getOutOfPlace();
 						checkedNode = new SearchNode(prev, s, c, h);
 					}
-					if (heuristic == "MANHATTAN")
+					if (heuristic.equals(Heuristic.MANHATTAN))
 					{
-						//Create new SearchNode with tempNode as the parent,
-						//tempNode's cost in addition to the new cost for temp state
-						//and the Manhattan h(n) value
-						SearchNode prev = tempNode;
-						State s = tempSuccessors.get(i);
-						double c = tempNode.getCost() + tempSuccessors.get(i).findCost();
 						double h = tempSuccessors.get(i).getManDist();
 						checkedNode = new SearchNode(prev, s, c, h);
 					}
 					else
 					{
-						//Create new SearchNode with tempNode as the parent,
-						//tempNode's cost in addition to the new cost for temp state
-						//and the Average h(n) value
-						SearchNode prev = tempNode;
-						State s = tempSuccessors.get(i);
-						double c = tempNode.getCost() + tempSuccessors.get(i).findCost();
 						double h = tempSuccessors.get(i).getAverageHeuristic();
 						checkedNode = new SearchNode(prev, s, c, h);
 					}
 
 					// Check for repeats before adding the new node
-					if(!isCTP){
-						int hashCode = checkedNode.getCurrentState().hashCode();
-						if(!visitedStates.contains(hashCode))
-						{
-							nodeSuccessors.add(checkedNode);
-							visitedStates.add(hashCode);
-						}
-					}
-					else{
-						if (!checkRepeats(checkedNode))
-						{
-							nodeSuccessors.add(checkedNode);
-						}
+					int hashCode = checkedNode.getCurrentState().hashCode();
+					if(!visitedStates.contains(hashCode))
+					{
+						nodeSuccessors.add(checkedNode);
+						visitedStates.add(hashCode);
 					}
 
 				}
@@ -167,21 +150,12 @@ public class AStarSearch
 
 				// Size of the stack before looping through and emptying it
 				int loopSize = solutionPath.size();
-				int timeTaken = 0;
-
 				for (int i = 0; i < loopSize; i++)
 				{
 					tempNode = solutionPath.pop();
 					tempNode.getCurrentState().printState();
-					// Gets the time taken for CTP
-					if(isCTP){
-						timeTaken = timeTaken + tempNode.getCurrentState().getTimeTaken();
-					}
 					System.out.println();
 					System.out.println();
-				}
-				if(isCTP){
-					System.out.println("Total time taken to cross: " + timeTaken);
 				}
 				System.out.println("A* cost: " + tempNode.getCost());
 				System.out.println("Total nodes processed: " + searchCount);
@@ -191,26 +165,98 @@ public class AStarSearch
 		}
 		
 		System.out.println("Error, could not perform A*!");
-
 	}
 
-	/*
-	 * Helper method to check to see if a SearchNode has already been evaluated.
-	 */
-	private static boolean checkRepeats(SearchNode n)
-	{
-		boolean repeated = false;
-		SearchNode checkNode = n;
+	public static State performSearch(Heuristic heuristic, State state) {
 
-		while (n.getParent() != null && !repeated)
-		{
-			if (n.getParent().getCurrentState().equals(checkNode.getCurrentState()))
-			{
-				repeated = true;
-			}
-			n = n.getParent();
-		}
+        if (state.isGoal()) {
+            return state;
+        }
 
-		return repeated;
-	}
+        Comparator<State> comparator = new StateComparator();
+        Queue<State> open = new PriorityQueue<>(10, comparator);
+        HashSet<State> closed = new HashSet<>();
+        open.add(state);
+
+        while (!open.isEmpty()) {
+
+            State currentState = open.poll();
+            closed.add(currentState);
+
+            for (State newState : currentState.generateChildren())
+            {
+                if (newState.isGoal()) {
+                    return newState;
+                }
+
+                boolean inClosed = closed.contains(newState);
+                if(!inClosed)
+                {
+                    boolean inOpen = open.contains(newState);
+                    if(!inOpen)
+                        open.add(newState);
+                    else
+                    {
+                        State openState = getObject(open, newState);
+
+                        if(newState.findCost() < openState.findCost())
+                        {
+                            openState.setStateValue((int)newState.findCost());
+                            openState.setPreviousState(newState.getPreviousState());
+                        }
+                    }
+
+                }
+
+            }
+        }
+
+        return null;
+    }
+	
+	//Used to print in backwards order
+    private static State reverseStates(State state)
+    {
+    	State previousSystem = null;
+        State currentSystem = state;
+
+        while(currentSystem != null)
+        {
+            State temp =  currentSystem.getPreviousState();
+            currentSystem.setPreviousState(previousSystem);
+            previousSystem = currentSystem;
+            currentSystem = temp;
+        }
+
+        return previousSystem;
+    }
+
+
+    public static String getPathToSuccess(State state)
+    {
+        StringBuilder builder = new StringBuilder();
+        state = reverseStates(state);
+
+        int count = 0;
+
+        while(state != null)
+        {
+            builder.append(state.toString());
+            state = state.getPreviousState();
+            count++;
+        }
+
+        return builder.toString() + "Total Nodes Processed: " + count;
+    }
+
+     private static State getObject( Collection<State> states, State state)
+     {
+         for (State system: states) {
+             if(state.equals(system))
+                 return system;
+         }
+
+         return null;
+     }
+	
 }

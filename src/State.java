@@ -31,7 +31,11 @@ public interface State
 	
 	// Time taken  
 	public int getTimeTaken();
-
-	// compare the actual state data
-	public boolean equals(State s);
+	
+	//Used for CTP in A*
+	public void setStateValue(int stateValue);
+	
+	public State getPreviousState();
+	
+	public void setPreviousState(State State);
 }
